@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>💕 Couple Intime</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
+    body { background: linear-gradient(135deg, #9333EA, #EC4899, #EF4444); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .card { background: white; 
+border-radius: 24px; padding: 32px; max-width: 400px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+    .emoji { font-size: 64px; text-align: center; margin-bottom: 16px; }
+    h1 { font-size: 32px; text-align: center; color: #9333EA; margin-bottom: 8px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 24px; font-style: italic; }
+    input { width: 100%; padding: 12px 16px; border: 2px solid #DDD; border-radius: 12px; font-size: 18px; margin-bottom: 12px; }
+    input:focus { outline: none; border-color: #9333EA; }
+    .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 12px; }
+    .btn-primary { background: linear-gradient(135deg, #9333EA, #EC4899); color: white; }
+    .btn-secondary { background: white; color: #9333EA; border: 2px solid #9333EA; }
+    .category { background: linear-gradient(135deg, #FDE1E8, #DDD6FE); padding: 24px; border-radius: 16px; text-align: center; margin-bottom: 12px; cursor: pointer; border: 3px solid #FCC2D7; }
+    .category:active { transform: scale(0.95); }
+    .category-emoji { font-size: 48px; margin-bottom: 8px; }
+    .category-title { font-size: 20px; font-weight: bold; color: #333; }
+    .question { background: linear-gradient(135deg, #EC4899, #9333EA); color: white; padding: 32px; border-radius: 16px; margin-bottom: 24px; font-size: 20px; text-align: center; line-height: 1.6; }
+    .hidden { display: none; }
+    .divider { text-align: center; color: #999; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    let state = { screen: 'welcome', sessionCode: '', playerName: '', categoryType: '', answeredQuestions: 0 };
+    
+    const questions = {
+      soft: [
+        "Quel est ton plus grand rêve dans la vie ?",
+        "Comment imagines-tu ta vie dans 10 ans ?",
+        "Qu'est-ce qui te passionne vraiment ?",
+        "Comment définirais-tu l'amour ?",
+        "Qu'est-ce qui te fait te sentir vivant(e) ?",
+        "Si tu pouvais vivre n'importe où, ce serait où ?",
+        "Quelle est la chose dont tu es le plus fier/fière ?",
+        "Quel moment de ta vie t'a le plus changé ?"
+      ],
+      hardcore: [
+        "Décris ton fantasme numéro 1",
+        "Qu'est-ce qui t'excite le plus ?",
+        "Raconte ton envie secrète",
+        "Qu'est-ce qui te fait perdre le contrôle ?",
+        "Quelle est ta plus grande fantaisie ?",
+        "Décris ce que tu ferais en ce moment",
+        "Qu'est-ce qui te rend fou/folle ?"
+      ]
+    };
+    
+    function generateCode() {
+      return Math.random().toString(36).substring(2, 8).toUpperCase();
+    }
+    
+    function render() {
+      const app = document.getElementById('app');
+      
+      if (state.screen === 'welcome') {
+        app.innerHTML = `
+          <div class="card">
+            <div class="emoji">💕</div>
+            <h1>Couple Intime</h1>
+            <p class="subtitle">Apprenez à vous connaître</p>
+            <input type="text" id="name" placeholder="Ton prénom 💕" value="${state.playerName}">
+            <button class="btn btn-primary" onclick="createSession()">✨ Créer une session</button>
+            <p class="divider">ou</p>
+            <input type="text" id="code" placeholder="Code de session" maxlength="6" style="text-transform:uppercase; text-align:center; font-family: monospace;">
+            <button class="btn btn-secondary" onclick="joinSession()">💑 Rejoindre</button>
+          </div>
+        `;
+      }
+      
+      else if (state.screen === 'category') {
+        app.innerHTML = `
+          <div class="card">
+            <div class="emoji">💕</div>
+            <h1 style="font-size: 24px;">Session: ${state.sessionCode}</h1>
+            <p class="subtitle">Bienvenue ${state.playerName}</p>
+            ${state.answeredQuestions > 0 ? `
+              <div style="background: linear-gradient(135deg, #DDD6FE, #FBCFE8); padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 16px;">
+                <div style="font-size: 32px; font-weight: bold; color: #9333EA;">${state.answeredQuestions}</div>
+                <div style="font-size: 14px; color: #666;">Questions répondues</div>
+              </div>
+            ` : ''}
+            <div class="category" onclick="selectCategory('soft')">
+              <div class="category-emoji">🌸</div>
+              <div class="category-title">Mode Soft</div>
+              <p style="font-size:14px; color:#666; margin-top:4px;">Questions douces et romantiques</p>
+            </div>
+            <div class="category" onclick="selectCategory('hardcore')" style="background: linear-gradient(135deg, #FECACA, #FBCFE8); border-color: #FCA5A5;">
+              <div class="category-emoji">🔥</div>
+              <div class="category-title">Mode Hot</div>
+              <p style="font-size:14px; color:#666; margin-top:4px;">Questions intimes et coquines</p>
+            </div>
+            <button class="btn btn-secondary" onclick="goBack('welcome')">← Retour</button>
+          </div>
+        `;
+      }
+      
+      else if (state.screen === 'game') {
+        const q = questions[state.categoryType];
+        const currentQ = q[Math.floor(Math.random() * q.length)];
+        
+        app.innerHTML = `
+          <div class="card">
+            <div style="text-align:center; font-size:32px; margin-bottom:16px;">
+              ${state.categoryType === 'soft' ? '🌸' : '🔥'}
+            </div>
+            <div class="question">${currentQ}</div>
+            <input type="text" id="response" placeholder="Ta réponse... 💭" style="margin-bottom: 16px;">
+            <button class="btn btn-primary" onclick="nextQuestion()">⚡ Question suivante</button>
+            <button class="btn btn-secondary" onclick="goBack('category')">← Catégories</button>
+            <p style="text-align:center; font-size:12px; color:#999; margin-top:16px;">
+              💡 Envoyez des Snaps pour pimenter !<br>
+              Questions répondues: ${state.answeredQuestions}
+            </p>
+          </div>
+        `;
+      }
+    }
+    
+    function createSession() {
+      const name = document.getElementById('name').value;
+      if (!name.trim()) { alert('Entre ton prénom 💕'); return; }
+      state.playerName = name;
+      state.sessionCode = generateCode();
+      state.screen = 'category';
+      localStorage.setItem('coupleIntimeData', JSON.stringify(state));
+      render();
+    }
+    
+    function joinSession() {
+      const name = document.getElementById('name').value;
+      const code = document.getElementById('code').value;
+      if (!name.trim() || !code.trim()) { alert('Entre ton prénom et le code 💕'); return; }
+      state.playerName = name;
+      state.sessionCode = code.toUpperCase();
+      state.screen = 'category';
+      localStorage.setItem('coupleIntimeData', JSON.stringify(state));
+      render();
+    }
+    
+    function selectCategory(type) {
+      state.categoryType = type;
+      state.screen = 'game';
+      render();
+    }
+    
+    function nextQuestion() {
+      const response = document.getElementById('response');
+      if (response && response.value.trim()) {
+        state.answeredQuestions++;
+        localStorage.setItem('coupleIntimeData', JSON.stringify(state));
+      }
+      render();
+    }
+    
+    function goBack(screen) {
+      state.screen = screen;
+      render();
+    }
+    
+    // Charger les données sauvegardées
+    const saved = localStorage.getItem('coupleIntimeData');
+    if (saved) {
+      const data = JSON.parse(saved);
+      state = { ...state, ...data, screen: 'welcome' };
+    }
+    
+    render();
+  </script>
+</body>
+</html>
