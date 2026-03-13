@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#C41E3A">
+    <title>SexBirdz 🔥 - Multi-joueurs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Firebase v10 MODERN -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+      import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyAZwgw9xcb0nK_BX0zAyqmufptakmUzmFY",
+        authDomain: "sexbirdz.firebaseapp.com",
+        databaseURL: "https://sexbirdz-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "sexbirdz",
+        storageBucket: "sexbirdz.firebasestorage.app",
+        messagingSenderId: "888304501563",
+        appId: "1:888304501563:web:66d8c27b49102c0ff42d1e"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      window.DB = {
+        async set(path, value) { 
+          try { await set(ref(db, path), value); return true; } 
+          catch (e) { console.error("DB.set error:", e); return false; } 
+        },
+        async get(path) { 
+          try { const snap = await get(ref(db, path)); return snap.val(); } 
+          catch (e) { console.error("DB.get error:", e); return null; } 
+        },
+        listen(path, callback) {
+          onValue(ref(db, path), (snap) => callback(snap.val()));
+        }
+      };
+
+      console.log("Firebase v10 chargé");
+    </script>
+
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        :root {
+            --primary:#C41E3A; --accent:#FF4466; --dark:#1a0510; --light:#FFF0F3;
+            --gold:#FFD700; --glow:rgba(196,30,58,0.4);
+        }
+        body {
+            font-family:'Josefin Sans',sans-serif;
+            background:radial-gradient(ellipse at top,#8B0A1A,#1a0510);
+            min-height:100vh; color:var(--light);
+        }
+        .container { max-width:800px; margin:0 auto; padding:2rem 1rem; }
+        h1 { font-family:'Cormorant Garamond',serif; font-size:3.5rem; color:var(--accent); text-shadow:0 0 30px var(--glow); text-align:center; }
+        .stats-bar { display:flex; justify-content:center; gap:1.5rem; margin:1.5rem 0; flex-wrap:wrap; }
+        .stat-item { background:rgba(255,215,0,0.1); padding:0.8rem 1.2rem; border-radius:20px; border:1px solid var(--gold); text-align:center; min-width:100px; }
+        .stat-value { font-size:2.2rem; font-weight:bold; color:var(--gold); }
+        .btn { background:linear-gradient(135deg,var(--primary),var(--accent)); color:white; border:none; padding:1.2rem; font-size:1.1rem; border-radius:50px; margin:1rem auto; display:block; width:80%; max-width:400px; cursor:pointer; box-shadow:0 4px 15px var(--glow); }
+        .card { background:rgba(45,21,32,0.85); border:1px solid var(--accent); border-radius:20px; padding:2rem; margin:1.5rem 0; box-shadow:0 8px 30px rgba(0,0,0,0.5); }
+        .question-box { background:rgba(196,30,58,0.2); border:2px solid var(--accent); border-radius:20px; padding:2rem; margin:2rem 0; text-align:center; font-size:1.4rem; min-height:150px; display:flex; align-items:center; justify-content:center; }
+        .hidden { display:none; }
+        input { width:100%; padding:1rem; font-size:1.2rem; margin:1rem 0; border-radius:10px; border:1px solid var(--accent); background:rgba(0,0,0,0.4); color:white; text-align:center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>SexBirdz <span style="font-size:1.5rem;">🔥</span></h1>
+
+    <div class="stats-bar">
+        <div class="stat-item"><div class="stat-value" id="qCount">0</div><div>questions</div></div>
+        <div class="stat-item"><div class="stat-value" id="streak">0</div><div>série</div></div>
+    </div>
+
+    <!-- Écran d'accueil -->
+    <div id="homeScreen" class="card">
+        <h2 style="text-align:center; color:var(--gold);">Multi-joueurs</h2>
+        <button class="btn" onclick="showScreen('createScreen')">➕ Créer une session</button>
+        <button class="btn" onclick="showScreen('joinScreen')">🔗 Rejoindre</button>
+    </div>
+
+    <!-- Créer session -->
+    <div id="createScreen" class="card hidden">
+        <h2>Créer une session</h2>
+        <input id="playerNameCreate" placeholder="Ton prénom" maxlength="15">
+        <button class="btn" onclick="createSession()">Créer & obtenir code</button>
+        <button class="btn" onclick="backToHome()" style="background:#444;">← Retour</button>
+    </div>
+
+    <!-- Rejoindre session -->
+    <div id="joinScreen" class="card hidden">
+        <h2>Rejoindre</h2>
+        <input id="sessionCodeJoin" placeholder="Code (ex: ABC123)" maxlength="6" style="text-transform:uppercase;">
+        <input id="playerNameJoin" placeholder="Ton prénom" maxlength="15">
+        <button class="btn" onclick="joinSession()">Rejoindre</button>
+        <button class="btn" onclick="backToHome()" style="background:#444;">← Retour</button>
+    </div>
+
+    <!-- Salle d'attente -->
+    <div id="waitingScreen" class="card hidden">
+        <h2>En attente...</h2>
+        <p style="text-align:center; font-size:1.5rem; color:var(--gold); margin:1rem 0;" id="sessionCodeDisplay">------</p>
+        <p style="text-align:center;">Partage ce code avec ton partenaire</p>
+        <button class="btn" onclick="copyCode()">Copier code</button>
+        <button class="btn" onclick="backToHome()" style="background:#444;">Annuler</button>
+    </div>
+
+    <!-- Écran jeu -->
+    <div id="gameScreen" class="card hidden">
+        <div class="question-box" id="questionBox">En attente de la question...</div>
+        <textarea id="myAnswer" placeholder="Ta réponse..." style="width:100%; height:100px; margin:1rem 0; padding:1rem; font-size:1rem; border-radius:10px; background:rgba(0,0,0,0.4); color:white; border:1px solid var(--accent);"></textarea>
+        <button class="btn" onclick="sendAnswer()">Envoyer ma réponse</button>
+        <div style="margin-top:2rem; padding:1rem; background:rgba(0,0,0,0.3); border-radius:10px;">
+            <strong>Réponse de ton partenaire :</strong><br>
+            <div id="partnerAnswer" style="margin-top:0.5rem; min-height:50px;">En attente...</div>
+        </div>
+        <button class="btn" onclick="nextQuestion()" style="margin-top:1rem;">Question suivante</button>
+    </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────
+// CONFIG & UTILS
+// ────────────────────────────────────────────────
+
+let gameState = {
+    sessionCode: null,
+    isHost: false,
+    playerName: '',
+    partnerName: '',
+    currentQuestion: '',
+    myAnswer: '',
+    partnerAnswer: '',
+    listener: null
+};
+
+function showScreen(id) {
+    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+}
+
+function backToHome() {
+    if (gameState.listener) gameState.listener(); // Arrête écoute
+    gameState = { sessionCode:null, isHost:false, playerName:'', partnerName:'', currentQuestion:'', myAnswer:'', partnerAnswer:'' };
+    showScreen('homeScreen');
+}
+
+function copyCode() {
+    navigator.clipboard.writeText(gameState.sessionCode);
+    alert("Code copié !");
+}
+
+// ────────────────────────────────────────────────
+// CRÉER SESSION
+// ────────────────────────────────────────────────
+
+async function createSession() {
+    const name = document.getElementById('playerNameCreate').value.trim();
+    if (!name) return alert("Entre ton prénom !");
+
+    gameState.playerName = name;
+    gameState.isHost = true;
+    gameState.sessionCode = Math.random().toString(36).substring(2,8).toUpperCase();
+
+    try {
+        await DB.set(`sessions/${gameState.sessionCode}`, {
+            hostName: name,
+            created: Date.now(),
+            question: "Quelle est ta position préférée ?",
+            hostAnswer: "",
+            guestAnswer: ""
+        });
+
+        document.getElementById('sessionCodeDisplay').textContent = gameState.sessionCode;
+        showScreen('waitingScreen');
+
+        // Écoute les changements (partenaire rejoint, réponses...)
+        gameState.listener = DB.listen(`sessions/${gameState.sessionCode}`, (data) => {
+            if (data && data.guestName) {
+                gameState.partnerName = data.guestName;
+                document.getElementById('partnerAnswer').textContent = data.guestAnswer || "En attente...";
+            }
+            if (data && data.question) {
+                document.getElementById('questionBox').textContent = data.question;
+                gameState.currentQuestion = data.question;
+            }
+        });
+
+        alert("Session créée ! Code : " + gameState.sessionCode + "\nPartage-le avec ton partenaire");
+    } catch (e) {
+        alert("Erreur création : " + e.message);
+    }
+}
+
+// ────────────────────────────────────────────────
+// REJOINDRE SESSION
+// ────────────────────────────────────────────────
+
+async function joinSession() {
+    const code = document.getElementById('sessionCodeJoin').value.trim().toUpperCase();
+    const name = document.getElementById('playerNameJoin').value.trim();
+
+    if (!code || !name) return alert("Code + prénom obligatoires !");
+
+    try {
+        const session = await DB.get(`sessions/${code}`);
+        if (!session) return alert("Code invalide !");
+
+        gameState.sessionCode = code;
+        gameState.playerName = name;
+        gameState.isHost = false;
+
+        await DB.set(`sessions/${code}/guestName`, name);
+
+        showScreen('gameScreen');
+        document.getElementById('questionBox').textContent = session.question || "En attente...";
+
+        gameState.listener = DB.listen(`sessions/${code}`, (data) => {
+            if (data) {
+                document.getElementById('partnerAnswer').textContent = data.hostAnswer || "En attente...";
+                document.getElementById('questionBox').textContent = data.question || "En attente...";
+            }
+        });
+
+        alert("Connecté !");
+    } catch (e) {
+        alert("Erreur : " + e.message);
+    }
+}
+
+// ────────────────────────────────────────────────
+// ENVOYER RÉPONSE
+// ────────────────────────────────────────────────
+
+async function sendAnswer() {
+    const answer = document.getElementById('myAnswer').value.trim();
+    if (!answer) return alert("Écris quelque chose !");
+
+    gameState.myAnswer = answer;
+
+    if (gameState.isHost) {
+        await DB.set(`sessions/${gameState.sessionCode}/hostAnswer`, answer);
+    } else {
+        await DB.set(`sessions/${gameState.sessionCode}/guestAnswer`, answer);
+    }
+
+    alert("Réponse envoyée !");
+}
+
+// ────────────────────────────────────────────────
+// QUESTION SUIVANTE (simple pour tester)
+// ────────────────────────────────────────────────
+
+async function nextQuestion() {
+    const newQuestion = "Quelle partie de mon corps te rend fou/folle ?"; // À remplacer par liste aléatoire après
+    await DB.set(`sessions/${gameState.sessionCode}/question`, newQuestion);
+    await DB.set(`sessions/${gameState.sessionCode}/hostAnswer`, "");
+    await DB.set(`sessions/${gameState.sessionCode}/guestAnswer`, "");
+    document.getElementById('myAnswer').value = "";
+    document.getElementById('partnerAnswer').textContent = "En attente...";
+    alert("Nouvelle question envoyée !");
+}
+</script>
+
+</body>
+</html>
