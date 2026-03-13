@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#C41E3A">
+    <title>SexBirdz 🔥 - Réparé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Firebase v10 MODERN -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+      import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyAZwgw9xcb0nK_BX0zAyqmufptakmUzmFY",
+        authDomain: "sexbirdz.firebaseapp.com",
+        databaseURL: "https://sexbirdz-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "sexbirdz",
+        storageBucket: "sexbirdz.firebasestorage.app",
+        messagingSenderId: "888304501563",
+        appId: "1:888304501563:web:66d8c27b49102c0ff42d1e"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      window.DB = {
+        async set(key, value) { 
+          try { await set(ref(db, key), value); return true; } 
+          catch (e) { console.error("DB.set failed:", e); return false; } 
+        },
+        async get(key) { 
+          try { const snap = await get(ref(db, key)); return snap.val(); } 
+          catch (e) { console.error("DB.get failed:", e); return null; } 
+        }
+      };
+
+      console.log("Firebase v10 chargé OK");
+    </script>
+
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        :root {
+            --primary:#C41E3A; --accent:#FF4466; --dark:#1a0510; --light:#FFF0F3;
+            --gold:#FFD700; --glow:rgba(196,30,58,0.4);
+        }
+        body {
+            font-family:'Josefin Sans',sans-serif;
+            background:radial-gradient(ellipse at top,#8B0A1A,#1a0510);
+            min-height:100vh; color:var(--light);
+        }
+        .container { max-width:800px; margin:0 auto; padding:2rem 1rem; }
+        h1 { font-family:'Cormorant Garamond',serif; font-size:3.5rem; color:var(--accent); text-shadow:0 0 30px var(--glow); text-align:center; }
+        .stats-bar { display:flex; justify-content:center; gap:1.5rem; margin:1.5rem 0; flex-wrap:wrap; }
+        .stat-item { background:rgba(255,215,0,0.1); padding:0.8rem 1.2rem; border-radius:20px; border:1px solid var(--gold); text-align:center; min-width:100px; }
+        .stat-value { font-size:2rem; font-weight:bold; color:var(--gold); }
+        .btn { background:linear-gradient(135deg,var(--primary),var(--accent)); color:white; border:none; padding:1.2rem; font-size:1.1rem; border-radius:50px; margin:1rem auto; display:block; width:80%; max-width:400px; cursor:pointer; box-shadow:0 4px 15px var(--glow); }
+        .card { background:rgba(45,21,32,0.85); border:1px solid var(--accent); border-radius:20px; padding:2rem; margin:1.5rem 0; box-shadow:0 8px 30px rgba(0,0,0,0.5); }
+        .question-box { background:rgba(196,30,58,0.2); border:2px solid var(--accent); border-radius:20px; padding:2rem; margin:2rem 0; text-align:center; font-size:1.4rem; min-height:150px; display:flex; align-items:center; justify-content:center; }
+        .hidden { display:none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>SexBirdz <span style="font-size:1.5rem;">🔥</span></h1>
+
+    <div class="stats-bar">
+        <div class="stat-item"><div class="stat-value" id="qCount">0</div><div>questions</div></div>
+        <div class="stat-item"><div class="stat-value" id="streak">0</div><div>série</div></div>
+        <div class="stat-item"><div class="stat-value" id="sessions">0</div><div>sessions</div></div>
+    </div>
+
+    <!-- Écran d'accueil -->
+    <div id="homeScreen" class="card">
+        <h2 style="text-align:center; color:var(--gold);">Choisis ton mode</h2>
+        <button class="btn" onclick="startQuestionsMode()">💬 Mode Questions</button>
+        <button class="btn" onclick="alert('Mode Quiz bientôt !')">🎴 Mode Quiz</button>
+        <button class="btn" onclick="alert('Mode Solo bientôt !')">🔍 Mode Solo</button>
+    </div>
+
+    <!-- Écran Questions -->
+    <div id="questionsScreen" class="card hidden">
+        <div class="question-box" id="questionBox">Appuie sur "Question suivante" pour commencer !</div>
+        <button class="btn" onclick="nextQuestion()">➡️ Question suivante</button>
+        <button class="btn" onclick="backToHome()" style="background:#444;">← Retour</button>
+    </div>
+</div>
+
+<script>
+// Debug rapide
+console.log("SexBirdz réparé chargé !");
+
+// Stats locales (sans Firebase pour l’instant)
+let stats = { questions:0, streak:0, sessions:0 };
+function updateStatsDisplay() {
+    document.getElementById('qCount').textContent = stats.questions;
+    document.getElementById('streak').textContent = stats.streak;
+    document.getElementById('sessions').textContent = stats.sessions;
+}
+
+// Liste de questions simple pour tester
+const questions = [
+    "Quelle est ta position préférée avec moi ?",
+    "Qu’est-ce qui t’excite le plus quand je te touche ?",
+    "Quel est ton fantasme secret que tu veux qu’on réalise ?",
+    "Comment aimes-tu que je te fasse jouir ?",
+    "Quelle partie de mon corps te rend fou/folle ?"
+];
+
+function startQuestionsMode() {
+    document.getElementById('homeScreen').classList.add('hidden');
+    document.getElementById('questionsScreen').classList.remove('hidden');
+    stats.questions = 0;
+    updateStatsDisplay();
+    document.getElementById('questionBox').textContent = "Appuie sur 'Question suivante' !";
+}
+
+function nextQuestion() {
+    stats.questions++;
+    stats.streak++;
+    updateStatsDisplay();
+    const q = questions[Math.floor(Math.random() * questions.length)];
+    document.getElementById('questionBox').textContent = q;
+}
+
+function backToHome() {
+    document.getElementById('questionsScreen').classList.add('hidden');
+    document.getElementById('homeScreen').classList.remove('hidden');
+}
+</script>
+
+</body>
+</html>
